@@ -4,13 +4,6 @@ import emailjs from '@emailjs/browser';
 import { gsap } from 'gsap';
 import { initScrollAnimations } from './animations.js';
 
-// Setup Lucide icons
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.lucide) {
-    window.lucide.createIcons();
-  }
-});
-
 // App State
 const state = {
   mouse: { x: 0, y: 0, targetX: 0, targetY: 0 },
@@ -18,10 +11,8 @@ const state = {
   windowHalfY: window.innerHeight / 2,
 };
 
-/* Custom Cursor Removed */
-
 /* =========================================================================
-   2. TYPEWRITER ANIMATION (HERO)
+   1. TYPEWRITER ANIMATION (HERO)
    ========================================================================= */
 const initTypewriter = () => {
   const typewriter = document.getElementById('typewriter');
@@ -63,7 +54,7 @@ const initTypewriter = () => {
 };
 
 /* =========================================================================
-   3. MOBILE NAVBAR DRAWER
+   2. MOBILE NAVBAR DRAWER
    ========================================================================= */
 const initMobileNav = () => {
   const toggle = document.getElementById('menu-toggle');
@@ -71,15 +62,14 @@ const initMobileNav = () => {
   const links = document.querySelectorAll('.nav-link');
   
   if (!toggle || !menu) return;
+
+  const svgMenu = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`;
+  const svgX = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>`;
   
   const toggleMenu = () => {
     menu.classList.toggle('active');
-    const icon = toggle.querySelector('i');
-    if (icon && window.lucide) {
-      const isClose = menu.classList.contains('active');
-      toggle.innerHTML = `<i data-lucide="${isClose ? 'x' : 'menu'}"></i>`;
-      window.lucide.createIcons();
-    }
+    const isClose = menu.classList.contains('active');
+    toggle.innerHTML = isClose ? svgX : svgMenu;
   };
   
   toggle.addEventListener('click', toggleMenu);
@@ -104,7 +94,7 @@ const initMobileNav = () => {
 };
 
 /* =========================================================================
-   4. THREE.JS 3D BACKGROUND & HERO INTERACTIVE GLOBE
+   3. THREE.JS 3D BACKGROUND & HERO INTERACTIVE GLOBE
    ========================================================================= */
 let globalGlobe = null; // Reference for scroll-bound animations
 
@@ -226,7 +216,6 @@ const initThreeJS = () => {
 
   window.addEventListener('touchmove', (event) => {
     if (event.touches.length > 0) {
-      // Prevent scrolling the page while interacting with the globe if dragging on it directly
       if (event.target.closest('#interactive-mesh-container')) {
         event.preventDefault();
       }
@@ -254,11 +243,11 @@ const initThreeJS = () => {
     }
   });
   
-  // Animation loop
-  const clock = new THREE.Clock();
+  // Animation loop (Uses performance.now() to be deprecation-free)
+  const startTime = performance.now();
   
   const tick = () => {
-    const elapsedTime = clock.getElapsedTime();
+    const elapsedTime = (performance.now() - startTime) * 0.001;
     
     // Slow drift for background stars
     starField.rotation.y = elapsedTime * 0.02;
@@ -294,7 +283,7 @@ const initThreeJS = () => {
 };
 
 /* =========================================================================
-   5. PROJECT CARD FILTERS & DETAILED MODAL
+   4. PROJECT CARD FILTERS & DETAILED MODAL
    ========================================================================= */
 const initProjectsManager = () => {
   const filters = document.querySelectorAll('.filter-btn');
@@ -303,7 +292,7 @@ const initProjectsManager = () => {
   const modalOverlay = document.getElementById('modal-overlay');
   const modalClose = document.getElementById('modal-close');
   
-  // Filter Functionality (Smooth GSAP animations without race conditions)
+  // Filter Functionality
   filters.forEach(btn => {
     btn.addEventListener('click', () => {
       // Toggle active classes
@@ -374,11 +363,6 @@ const initProjectsManager = () => {
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden'; // Lock background scrolling
-    
-    // Relight icons in the modal
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
   };
   
   const closeModal = () => {
@@ -409,16 +393,12 @@ const initProjectsManager = () => {
 };
 
 /* =========================================================================
-   6. CONTACT FORM & EMAILJS INTEGRATION
+   5. CONTACT FORM & EMAILJS INTEGRATION
    ========================================================================= */
 const initContactForm = () => {
   const form = document.getElementById('contact-form');
   if (!form) return;
   
-  // =========================================================================
-  // CONFIGURATION: Replace these values with your actual EmailJS credentials.
-  // Register at https://dashboard.emailjs.com/ to get your IDs.
-  // =========================================================================
   const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_8hzwey8';
   const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_nbkl10j';
   const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'XSVvszu1ybqgMBJhA';
@@ -503,8 +483,8 @@ const initContactForm = () => {
       email: email,
       subject: subject,
       message: message,
-      content: message, // Provided in case template references {{content}}
-      time: new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' }) // Generates structured local timestamp
+      content: message, // Mapped in case template references {{content}}
+      time: new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' })
     };
 
     // Check if credentials are still placeholder keys. If so, fallback to mockup mode for local testing.
@@ -521,10 +501,8 @@ const initContactForm = () => {
         form.reset();
       }, 1200);
     } else {
-      // Send Email via EmailJS send API
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, {
-        publicKey: EMAILJS_PUBLIC_KEY
-      })
+      // Send Email via EmailJS send API (Fixed fourth argument syntax)
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY)
       .then(() => {
         triggerConfetti();
         showToast('Message Transmitted Successfully! 🚀');
@@ -543,7 +521,7 @@ const initContactForm = () => {
 };
 
 /* =========================================================================
-   7. NAVIGATION ACTIVE SECTION TRACKER (SCROLL SPY)
+   6. NAVIGATION ACTIVE SECTION TRACKER (SCROLL SPY)
    ========================================================================= */
 const initScrollSpy = () => {
   const sections = document.querySelectorAll('section');
@@ -573,7 +551,7 @@ const initScrollSpy = () => {
 };
 
 /* =========================================================================
-   8. CORE INITIALIZATION
+   7. CORE INITIALIZATION
    ========================================================================= */
 const init = () => {
   initTypewriter();
