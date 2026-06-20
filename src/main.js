@@ -478,13 +478,25 @@ const initContactForm = () => {
     };
 
     // Prepare template parameters dynamically
+    const formattedTime = new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' });
+    const detailedMessage = `Subject: ${subject}
+
+Message:
+${message}
+
+----------------------------------------
+Sender Contact Details:
+Name: ${name}
+Email: ${email}
+Sent At: ${formattedTime}`;
+
     const templateParams = {
       name: name,
       email: email,
       subject: subject,
-      message: message,
-      content: message, // Mapped in case template references {{content}}
-      time: new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' })
+      message: detailedMessage,
+      content: detailedMessage, // Mapped in case template references {{content}}
+      time: formattedTime
     };
 
     // Check if credentials are still placeholder keys. If so, fallback to mockup mode for local testing.
